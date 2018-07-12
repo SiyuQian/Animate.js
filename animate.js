@@ -10,7 +10,7 @@ if (typeof jQuery === 'undefined') {
 
     const defaults = {
         wait: 200,
-        selector: '[data-animation-class]'
+        selector: '[data-animate]'
     };
 
     function Animate(options) {
@@ -67,64 +67,26 @@ if (typeof jQuery === 'undefined') {
             }
 
             this.observer = new IntersectionObserver(function(entries){
-                console.log('xxxxx');
+                entries.forEach(function(entry) {
+                    if (entry.intersectionRatio > 0) {
+                        // Load Animate
+                        self.animate(entry.target);
+                        // Unobserve the item
+                        self.observer.unobserve(entry.target);
+                    }
+                });
             });
 
             this.elements.forEach(function(element) {
                 self.observer.observe(element);
             });
         },
-        addAnimateClass: function (object) {
-            const compulsory = 'animated';
-            var animateClass = $(object).data('animation-class');
-            var animateDuration = $(object).data('animation-duration');
-            // element is on the screen
-            if ($(object).isOnScreen()) {
-                // run animate when element shows up on current screen
-                $(object).addClass(animateClass);
-            } else {
-                // element not on the screen
-                // clear animate when element leave the current screen
-                $(object).removeClass(animateClass);
-            }
-        },
-        isOnScreen: function() {
-            var height = this.outerHeight();
-            var width = this.outerWidth();
-
-            if(!width || !height){
-                return false;
-            }
-
-            var win = $(window);
-
-            var viewport = {
-                top : win.scrollTop(),
-                left : win.scrollLeft()
-            };
-
-            viewport.right = viewport.left + win.width();
-            viewport.bottom = viewport.top + win.height();
-
-            var bounds = this.offset();
-            bounds.right = bounds.left + width;
-            bounds.bottom = bounds.top + height;
-
-            var showing = {
-                top : viewport.bottom - bounds.top,
-                left: viewport.right - bounds.left,
-                bottom: bounds.bottom - viewport.top,
-                right: bounds.right - viewport.left
-            };
-
-            if (typeof test == 'function') {
-                return test(showing);
-            }
-
-            return showing.top > 0
-            && showing.left > 0
-            && showing.right > 0
-            && showing.bottom > 0;
+        animate: function(element) {
+            // required class
+            element.classList.add('animated');
+            element.classList.add(element.dataset.animate);
+            element.style.WebkitTransition = element.dataset.duration;
+            element.style.MozTransition = element.dataset.duration;
         }
     };
 
@@ -132,7 +94,7 @@ if (typeof jQuery === 'undefined') {
         const $ = jQuery;
         $.fn.animate = function (options) {
             options = options || {};
-            options.selector = options.selector || "[data-animation-class]";
+            options.selector = options.selector || "[data-animate]";
             new Animate(options);
             return this;
         };
